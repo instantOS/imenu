@@ -5,9 +5,9 @@
 ################################################
 
 case "$1" in
--c)
+-c) # confirmation dialog with prompt $2
     echo "yes
-no" | instantmenu -c -w 600 -l 100 -p "$2" >/tmp/isntantanswer
+no" | instantmenu -c -w 600 -l 100 -p "${2:-confirm}" >/tmp/isntantanswer
     ANSWER="$(cat /tmp/isntantanswer)"
     if grep -q "yes" <<<"${ANSWER}"; then
         exit 0
@@ -15,7 +15,7 @@ no" | instantmenu -c -w 600 -l 100 -p "$2" >/tmp/isntantanswer
         exit 1
     fi
     ;;
--C)
+-C) # confirmation dialog with prompt from stdin
     PROMPT="$(cat /dev/stdin | sed 's/^/> /g')"
     PROMPT="$PROMPT
 yes
@@ -30,5 +30,7 @@ no"
         exit 1
     fi
     ;;
-
+-P) # password dialog
+    echo "" | instantmenu -p "${2:-enter password}" -P -c -w 600
+    ;;
 esac
