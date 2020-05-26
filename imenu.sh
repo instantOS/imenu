@@ -4,10 +4,21 @@
 ## build menus and GUIs with just instantMENU ##
 ################################################
 
+# needs instantmenu, fzf and dialog
+
+climenu() {
+    [ -e /tmp/climenu ]
+}
+
 case "$1" in
 -c) # confirmation dialog with prompt $2
-    echo "yes
+    if ! climenu; then
+        echo "yes
 no" | instantmenu -bw 4 -c -l 100 -p "${2:-confirm}" >/tmp/isntantanswer
+    else
+        echo "yes
+no" | tac | fzf --prompt "$2> " >/tmp/isntantanswer
+    fi
     ANSWER="$(cat /tmp/isntantanswer)"
     if grep -q "yes" <<<"${ANSWER}"; then
         exit 0
@@ -18,35 +29,86 @@ no" | instantmenu -bw 4 -c -l 100 -p "${2:-confirm}" >/tmp/isntantanswer
 -C) # confirmation dialog with prompt from stdin
     PROMPT="$(cat /dev/stdin | sed 's/^/> /g')"
     PROMPT="$PROMPT
+
 yes
 no"
-    while ! grep -Eq '^(yes|no|forcequit)$' <<<"$ANSWER"; do
-        echo "$PROMPT" | instantmenu -bw 4 -c -l 100 >/tmp/isntantanswer
-        ANSWER="$(cat /tmp/isntantanswer)"
-    done
+    if ! climenu; then
+        while ! grep -Eq '^(yes|no|forcequit)$' <<<"$ANSWER"; do
+            echo "$PROMPT" | instantmenu -bw 4 -c -l 100 >/tmp/isntantanswer
+            ANSWER="$(cat /tmp/isntantanswer)"
+        done
+    else
+        while ! grep -Eq '^(yes|no|forcequit)$' <<<"$ANSWER"; do
+            echo "$PROMPT" | tac | fzf --prompt "? " >/tmp/isntantanswer
+            ANSWER="$(cat /tmp/isntantanswer)"
+        done
+    fi
+
     if grep -q "yes" <<<"${ANSWER}"; then
         exit 0
     else
         exit 1
     fi
+
     ;;
 -P) # password dialog
-    echo "" | instantmenu -bw 4 -p "${2:-enter password}" -P -c -w 800
+    if ! climenu; then
+        echo "" | instantmenu -bw 4 -p "${2:-enter password}" -P -c -w 800
+    else
+        passwordbox() {
+            unset user_input
+            while [ -z "$user_input" ]; do
+                #statements
+                user_input=$(
+                    dialog --passwordbox "${1:-enter password}" 700 700 \
+                        3>&1 1>&2 2>&3 3>&-
+                )
+            done
+            echo "$user_input"
+        }
+        passwordbox "${2:-enter password}"
+    fi
     ;;
 -i) # input dialog
-    echo "" | instantmenu -bw 4 -p "${2:-enter text}" -c -w 800
+    if ! climenu; then
+        echo "" | instantmenu -bw 4 -p "${2:-enter text}" -c -w 800
+    else
+        textbox() {
+            unset user_input
+            while [ -z "$user_input" ]; do
+                #statements
+                user_input=$(
+                    dialog --inputbox "${1:-enter text}" 700 700 \
+                        3>&1 1>&2 2>&3 3>&-
+                )
+            done
+            echo "$user_input"
+        }
+        textbox "${2:-enter text}"
+    fi
     ;;
 -m) # message
     PROMPT=$(sed 's/^/> /g' <<<$2)
     PROMPT="$PROMPT
+
 OK"
-    echo "$PROMPT" | instantmenu -bw 4 -l 20 -c
+
+    if ! climenu; then
+        echo "$PROMPT" | instantmenu -bw 4 -l 20 -c
+    else
+        echo "$PROMPT" | fzf --prompt "- "
+    fi
     ;;
 -M) # message from stdin
     PROMPT="$(cat /dev/stdin | sed 's/^/> /g')"
     PROMPT="$PROMPT
+
 OK"
-    echo "$PROMPT" | instantmenu -bw 4 -l 20 -c
+    if ! climenu; then
+        echo "$PROMPT" | instantmenu -bw 4 -l 20 -c
+    else
+        echo "$PROMPT" | tac | fzf
+    fi
     ;;
 
 -l) # choose item from list
@@ -54,8 +116,11 @@ OK"
     ANSWER=""
 
     while ! grep -q .. <<<"$ANSWER"; do
-        ANSWER=$(echo "$ASTDIN" | instantmenu -bw 4 -p "${2:-choose}" -c -l 20)
-
+        if ! climenu; then
+            ANSWER=$(echo "$ASTDIN" | instantmenu -bw 4 -p "${2:-choose}" -c -l 20)
+        else
+            ANSWER=$(echo "$ASTDIN" | tac | fzf --prompt "${2:-choose}")
+        fi
         if grep -q "forcequit" <<<"$ANSWER"; then
             exit 1
         fi
