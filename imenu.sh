@@ -96,7 +96,7 @@ OK"
     if ! climenu; then
         echo "$PROMPT" | instantmenu -bw 4 -l 20 -c
     else
-        echo "$PROMPT" | fzf --prompt "- "
+        echo "$PROMPT" | tac | fzf --prompt "- "
     fi
     ;;
 -M) # message from stdin
