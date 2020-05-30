@@ -14,12 +14,21 @@ case "$1" in
 -c) # confirmation dialog with prompt $2
     if ! climenu; then
         echo "yes
-no" | instantmenu -bw 4 -c -l 100 -p "${2:-confirm}" >/tmp/isntantanswer
+no" | instantmenu -bw 4 -c -l 100 -p "${2:-confirm}" >/tmp/instantanswer
     else
-        echo "yes
-no" | tac | fzf --prompt "$2> " >/tmp/isntantanswer
+        #dialog confirm promt that returns exit status
+        confirm() {
+            DIATEXT=${1:-are you sure about that?}
+            dialog --yesno "$DIATEXT" 700 600
+        }
+        if confirm "$2"; then
+            echo "yes" >/tmp/instantanswer
+        else
+            echo "no" >/tmp/instantanswer
+        fi
     fi
-    ANSWER="$(cat /tmp/isntantanswer)"
+    
+    ANSWER="$(cat /tmp/instantanswer)"
     if grep -q "yes" <<<"${ANSWER}"; then
         exit 0
     else
@@ -34,13 +43,13 @@ yes
 no"
     if ! climenu; then
         while ! grep -Eq '^(yes|no|forcequit)$' <<<"$ANSWER"; do
-            echo "$PROMPT" | instantmenu -bw 4 -c -l 100 >/tmp/isntantanswer
-            ANSWER="$(cat /tmp/isntantanswer)"
+            echo "$PROMPT" | instantmenu -bw 4 -c -l 100 >/tmp/instantanswer
+            ANSWER="$(cat /tmp/instantanswer)"
         done
     else
         while ! grep -Eq '^(yes|no|forcequit)$' <<<"$ANSWER"; do
-            echo "$PROMPT" | tac | fzf --prompt "? " >/tmp/isntantanswer
-            ANSWER="$(cat /tmp/isntantanswer)"
+            echo "$PROMPT" | tac | fzf --prompt "? " >/tmp/instantanswer
+            ANSWER="$(cat /tmp/instantanswer)"
         done
     fi
 
