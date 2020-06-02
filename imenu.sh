@@ -13,8 +13,13 @@ climenu() {
 case "$1" in
 -c) # confirmation dialog with prompt $2
     if ! climenu; then
-        echo "yes
-no" | instantmenu -bw 4 -c -l 100 -p "${2:-confirm}" >/tmp/instantanswer
+        if ! [ ${#2} -ge 30 ]; then
+            echo "yes
+no" | instantmenu -w 300 -bw 4 -c -l 100 -p "${2:-confirm} " >/tmp/instantanswer
+        else
+            echo "yes
+no" | instantmenu -bw 4 -c -l 100 -p "${2:-confirm} " >/tmp/instantanswer
+        fi
     else
         #dialog confirm promt that returns exit status
         confirm() {
@@ -27,7 +32,7 @@ no" | instantmenu -bw 4 -c -l 100 -p "${2:-confirm}" >/tmp/instantanswer
             echo "no" >/tmp/instantanswer
         fi
     fi
-    
+
     ANSWER="$(cat /tmp/instantanswer)"
     if grep -q "yes" <<<"${ANSWER}"; then
         exit 0
