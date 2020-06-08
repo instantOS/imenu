@@ -126,7 +126,7 @@ OK"
 
     while ! grep -q .. <<<"$ANSWER"; do
         if ! climenu; then
-            ANSWER=$(echo "$ASTDIN" | instantmenu -bw 4 -p "${2:-choose}" -c -l 20)
+            ANSWER=$(echo "$ASTDIN" | instantmenu -i -bw 4 -p "${2:-choose}" -c -l 20)
         else
             ANSWER=$(echo "$ASTDIN" | tac | fzf --prompt "${2:-choose}")
         fi
