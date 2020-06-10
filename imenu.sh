@@ -53,7 +53,8 @@ no"
         done
     else
         while ! grep -Eq '^(yes|no|forcequit)$' <<<"$ANSWER"; do
-            echo "$PROMPT" | tac | fzf --prompt "? " >/tmp/instantanswer
+            PROMPTHEIGHT=$(wc -l <<<"$PROMPT")
+            echo "$PROMPT" | fzf --header-lines "$(expr $PROMPTHEIGHT - 2)" --layout reverse --prompt "? " >/tmp/instantanswer
             ANSWER="$(cat /tmp/instantanswer)"
         done
     fi
@@ -106,11 +107,12 @@ no"
     PROMPT="$PROMPT
 
 OK"
+    PROMPTHEIGHT=$(wc -l <<<"$PROMPT")
 
     if ! climenu; then
         echo "$PROMPT" | instantmenu -bw 4 -l 20 -c
     else
-        echo "$PROMPT" | tac | fzf --prompt "- "
+        echo "$PROMPT" | fzf --layout reverse --header-lines "$(expr $PROMPTHEIGHT - 1)" --prompt "- "
     fi
     ;;
 -M) # message from stdin
@@ -118,10 +120,12 @@ OK"
     PROMPT="$PROMPT
 
 OK"
+    PROMPTHEIGHT=$(wc -l <<<"$PROMPT")
+
     if ! climenu; then
         echo "$PROMPT" | instantmenu -bw 4 -l 20 -c
     else
-        echo "$PROMPT" | tac | fzf
+        echo "$PROMPT" | fzf --layout reverse --header-lines "$(expr $PROMPTHEIGHT - 1)" --prompt "- "
     fi
     ;;
 
