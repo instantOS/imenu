@@ -137,13 +137,18 @@ OK"
         if ! climenu; then
             ANSWER=$(echo "$ASTDIN" | instantmenu -i -bw 4 -p "${2:-choose}" -c -l 20)
         else
-            ANSWER=$(echo "$ASTDIN" | tac | fzf --prompt "${2:-choose}")
+            if grep -q '^>' <<<"$ASTDIN"; then
+                HEADERLINES=$(echo "$ASTDIN" | grep '^>' | wc -l)
+                ANSWER=$(echo "$ASTDIN" | fzf --layout reverse --header-lines "$HEADERLINES" --prompt "${2:-choose}")
+            else
+                ANSWER=$(echo "$ASTDIN" | tac | fzf --prompt "${2:-choose}")
+            fi
         fi
         if grep -q "forcequit" <<<"$ANSWER"; then
             exit 1
         fi
 
-        if ! grep -q "^$ANSWER$" <<<"$ASTDIN"; then
+        if ! grep -q "^$ANSWER$" <<<"$ASTDIN" || grep '^>' <<<"$ANSWER"; then
             ANSWER=""
         fi
     done
