@@ -6,8 +6,13 @@
 
 # needs instantmenu, fzf and dialog
 
+if [ "$1" = "cli" ]; then
+    shift 1
+    USECLIMENU="True"
+fi
+
 climenu() {
-    [ -e /tmp/climenu ]
+    [ -e /tmp/climenu ] || [ -n "$USECLIMENU" ]
 }
 
 case "$1" in
