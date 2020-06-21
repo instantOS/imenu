@@ -39,6 +39,7 @@ no" | instantmenu -bw 4 -c -l 100 -p "${2:-confirm} " >/tmp/instantanswer
     fi
 
     ANSWER="$(cat /tmp/instantanswer)"
+    rm /tmp/instantanswer
     if grep -q "yes" <<<"${ANSWER}"; then
         exit 0
     else
@@ -63,7 +64,7 @@ no"
             ANSWER="$(cat /tmp/instantanswer)"
         done
     fi
-
+    rm /tmp/instantanswer
     if grep -q "yes" <<<"${ANSWER}"; then
         exit 0
     else
