@@ -19,27 +19,27 @@ case "$1" in
 -c) # confirmation dialog with prompt $2
     if ! climenu; then
         if ! [ ${#2} -ge 30 ]; then
-            echo "yes
-no" | instantmenu -w 300 -bw 4 -c -l 100 -p "${2:-confirm} " >/tmp/instantanswer
+            ANSWER=$(echo "yes
+no" | instantmenu -w 300 -bw 4 -c -l 100 -p "${2:-confirm} ")
         else
-            echo "yes
-no" | instantmenu -bw 4 -c -l 100 -p "${2:-confirm} " >/tmp/instantanswer
+            ANSWER=$(echo "yes
+no" | instantmenu -bw 4 -c -l 100 -p "${2:-confirm} ")
         fi
     else
         #dialog confirm promt that returns exit status
+
         confirm() {
             DIATEXT=${1:-are you sure about that?}
             dialog --yesno "$DIATEXT" 700 600
         }
+
         if confirm "$2"; then
-            echo "yes" >/tmp/instantanswer
+            ANSWER="yes"
         else
-            echo "no" >/tmp/instantanswer
+            ANSWER="no"
         fi
     fi
 
-    ANSWER="$(cat /tmp/instantanswer)"
-    rm /tmp/instantanswer
     if grep -q "yes" <<<"${ANSWER}"; then
         exit 0
     else
@@ -54,17 +54,15 @@ yes
 no"
     if ! climenu; then
         while ! grep -Eq '^(yes|no|forcequit)$' <<<"$ANSWER"; do
-            echo "$PROMPT" | instantmenu -bw 4 -c -l 100 >/tmp/instantanswer
-            ANSWER="$(cat /tmp/instantanswer)"
+            ANSWER=$(echo "$PROMPT" | instantmenu -bw 4 -c -l 100)
         done
     else
         while ! grep -Eq '^(yes|no|forcequit)$' <<<"$ANSWER"; do
             PROMPTHEIGHT=$(wc -l <<<"$PROMPT")
-            echo "$PROMPT" | fzf --header-lines "$(expr $PROMPTHEIGHT - 2)" --layout reverse --prompt "? " >/tmp/instantanswer
-            ANSWER="$(cat /tmp/instantanswer)"
+            ANSWER=$(echo "$PROMPT" | fzf --header-lines "$(expr $PROMPTHEIGHT - 2)" --layout reverse --prompt "? ")
         done
     fi
-    rm /tmp/instantanswer
+
     if grep -q "yes" <<<"${ANSWER}"; then
         exit 0
     else
