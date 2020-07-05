@@ -159,5 +159,38 @@ OK"
 
     echo "$ANSWER"
     ;;
+-b)
+    # checkbox functionality
+    # lets user toggle
+    AFILE=/tmp/listfile
+    cat /dev/stdin >"$AFILE"
+    cat /dev/stdin
+    cat "$AFILE" | awk '{printf "%d %s\n", NR, $0}' | sed 's/^/[ ] /g' >"${AFILE}2"
+    echo "OK" >>"${AFILE}2"
+    cat "${AFILE}2" >"$AFILE"
+
+    quit() {
+        grep -a '^\[x' "$AFILE" | sed 's/^\[.\] [0-9]* //g'
+        rm "$AFILE"
+        exit
+    }
+
+    while ! [ "$ANSWER" = "OK" ]; do
+        ANSWER="$(cat "$AFILE" | instantmenu -l 30 -bw 4 -c)"
+        if grep -q '^OK' <<<"$ANSWER"; then
+            quit
+        fi
+        if [ -n "$ANSWER" ]; then
+            LINENUMBER=$(echo "$ANSWER" | grep -o '\[.\] [0-9]*' | grep -o '[0-9]*')
+            if grep -q '^\[ \]' <<<"$ANSWER"; then
+                NEWANSWER="$(echo "$ANSWER" | sed 's/^\[.\] /[x] /g' | sed 's|/|\\/|g')"
+            else
+                NEWANSWER="$(echo "$ANSWER" | sed 's/^\[.\] /[ ] /g' | sed 's|/|\\/|g')"
+            fi
+            sed -i "s/^\[.\] $LINENUMBER[^0-9][^0-9]*.*/$NEWANSWER/g" "$AFILE"
+        fi
+    done
+
+    ;;
 
 esac
