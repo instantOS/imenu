@@ -109,7 +109,7 @@ no"
 -m) # message
     PROMPT=$(sed 's/^/> /g' <<<$2)
     PROMPT="$PROMPT
-
+>
 OK"
     PROMPTHEIGHT=$(wc -l <<<"$PROMPT")
 
@@ -122,7 +122,7 @@ OK"
 -M) # message from stdin
     PROMPT="$(cat /dev/stdin | sed 's/^/> /g')"
     PROMPT="$PROMPT
-
+>
 OK"
     PROMPTHEIGHT=$(wc -l <<<"$PROMPT")
 
