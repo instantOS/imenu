@@ -152,7 +152,7 @@ OK"
             exit 1
         fi
 
-        if ! grep -q "^$ANSWER$" <<<"$ASTDIN" || grep '^>' <<<"$ANSWER"; then
+        if ! grep -Fxq "$ANSWER" <<<"$ASTDIN" || grep '^>' <<<"$ANSWER"; then
             ANSWER=""
         fi
     done
@@ -176,7 +176,7 @@ OK"
     }
 
     while ! [ "$ANSWER" = "OK" ]; do
-        ANSWER="$(cat "$AFILE" | instantmenu -l 30 -bw 4 -c)"
+        ANSWER="$(cat "$AFILE" | imenu -l 'type ok to confirm')"
         if grep -q '^OK' <<<"$ANSWER"; then
             quit
         fi
