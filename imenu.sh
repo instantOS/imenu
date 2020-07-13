@@ -17,13 +17,21 @@ climenu() {
 
 case "$1" in
 -c) # confirmation dialog with prompt $2
+    if [ "$2" = "-i" ]; then
+        shift 1
+        YESCOLOR=":ryes"
+        NOCOLOR=":gno"
+    else
+        YESCOLOR=":gyes"
+        NOCOLOR=":rno"
+    fi
     if ! climenu; then
         if ! [ ${#2} -ge 30 ]; then
-            ANSWER=$(echo "yes
-no" | instantmenu -w 300 -bw 4 -c -l 100 -p "${2:-confirm} ")
+            ANSWER=$(echo "$YESCOLOR
+$NOCOLOR" | instantmenu -w 300 -bw 4 -c -l 100 -p "${2:-confirm} ")
         else
-            ANSWER=$(echo "yes
-no" | instantmenu -bw 4 -c -l 100 -p "${2:-confirm} ")
+            ANSWER=$(echo "$YESCOLOR
+$NOCOLOR" | instantmenu -bw 4 -c -l 100 -p "${2:-confirm} ")
         fi
     else
         #dialog confirm promt that returns exit status
