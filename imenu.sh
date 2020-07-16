@@ -81,8 +81,14 @@ no"
 -w)
     # waiting thingy
     echo "> $2
-:g OK" | instantmenu -h -1 -l 20 -c -bw 4 -w -1 -q "loading..."
+:g OK" | instantmenu -h -1 -l 20 -c -bw 4 -w -1 -q "loading..." &
     ;;
+-e)
+    # error message
+    echo "> $2
+:r OK" | instantmenu -h -1 -l 20 -c -bw 4 -w -1 -q "error"
+    ;;
+
 -P) # password dialog
     if ! climenu; then
         echo "" | instantmenu -bw 4 -p "${2:-enter password}" -P -c -w 800
