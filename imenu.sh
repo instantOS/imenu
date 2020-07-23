@@ -109,7 +109,7 @@ no"
     ;;
 -i) # input dialog
     if ! climenu; then
-        echo "" | instantmenu -bw 4 -p "${2:-enter text}" -c -w 800
+        echo "" | instantmenu -bw 4 -q "${3:-enter to confirm}" -p "${2:-enter text}" -c -w 800 -I
     else
         textbox() {
             unset user_input
