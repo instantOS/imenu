@@ -61,8 +61,9 @@ $NOCOLOR" | instantmenu -bw 4 -c -l 100 -p "${2:-confirm} ")
 yes
 no"
     if ! climenu; then
-        while ! grep -Eq '^(yes|no|forcequit)$' <<<"$ANSWER"; do
-            ANSWER=$(echo "$PROMPT" | instantmenu -bw 4 -c -l 100)
+        while ! grep -Eq '^(:gyes|:rno|forcequit)$' <<<"$ANSWER"; do
+            ANSWER=$(echo "$PROMPT" | sed 's/^$/> /g' | sed 's/^yes$/:gyes/g' |
+                sed 's/^no$/:rno/g' | instantmenu -bw 4 -c -l 100 -q 'confirmation')
         done
     else
         while ! grep -Eq '^(yes|no|forcequit)$' <<<"$ANSWER"; do
