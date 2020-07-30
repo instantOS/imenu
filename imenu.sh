@@ -57,9 +57,9 @@ $NOCOLOR" | instantmenu -bw 4 -c -l 100 -p "${2:-confirm} ")
 -C) # confirmation dialog with prompt from stdin
     PROMPT="$(cat /dev/stdin | sed 's/^/> /g')"
     PROMPT="$PROMPT
-
-yes
-no"
+> 
+:gyes
+:rno"
     if ! climenu; then
         while ! grep -Eq '^(:gyes|:rno|forcequit)$' <<<"$ANSWER"; do
             ANSWER=$(echo "$PROMPT" | sed 's/^$/> /g' | sed 's/^yes$/:gyes/g' |
