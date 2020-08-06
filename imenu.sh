@@ -68,7 +68,7 @@ $NOCOLOR" | instantmenu -bw 4 -c -l 100 -p "${2:-confirm} ")
     else
         while ! grep -Eq '^(yes|no|forcequit)$' <<<"$ANSWER"; do
             PROMPTHEIGHT=$(wc -l <<<"$PROMPT")
-            ANSWER=$(echo "$PROMPT" | fzf --header-lines "$(expr $PROMPTHEIGHT - 2)" --layout reverse --prompt "? ")
+            ANSWER=$(echo "$PROMPT" | sed 's/^:.//g' | fzf --header-lines "$(expr $PROMPTHEIGHT - 2)" --layout reverse --prompt "? ")
         done
     fi
 
