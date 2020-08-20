@@ -56,7 +56,7 @@ $NOCOLOR" | instantmenu -bw 4 -c -l 100 -p "${2:-confirm} ")
     fi
     ;;
 -C) # confirmation dialog with prompt from stdin
-    PROMPT="$(cat /dev/stdin | sed 's/^/> /g')"
+    PROMPT="$(sed 's/^/> /g' </dev/stdin)"
     PROMPT="$PROMPT
 > 
 :gyes
@@ -69,7 +69,7 @@ $NOCOLOR" | instantmenu -bw 4 -c -l 100 -p "${2:-confirm} ")
     else
         while ! grep -Eq '^(yes|no|forcequit)$' <<<"$ANSWER"; do
             PROMPTHEIGHT=$(wc -l <<<"$PROMPT")
-            ANSWER=$(echo "$PROMPT" | sed 's/^:.//g' | fzf --header-lines "$(expr $PROMPTHEIGHT - 2)" --layout reverse --prompt "? ")
+            ANSWER=$(echo "$PROMPT" | sed 's/^:.//g' | fzf --header-lines "$(expr "$PROMPTHEIGHT" - 2)" --layout reverse --prompt "? ")
         done
     fi
 
@@ -126,20 +126,20 @@ $NOCOLOR" | instantmenu -bw 4 -c -l 100 -p "${2:-confirm} ")
     fi
     ;;
 -m) # message
-    PROMPT=$(sed 's/^/> /g' <<<$2)
+    PROMPT="$(sed 's/^/> /g' <<<$2)"
     PROMPT="$PROMPT
 >
 OK"
-    PROMPTHEIGHT=$(wc -l <<<"$PROMPT")
+    PROMPTHEIGHT="$(wc -l <<<"$PROMPT")"
 
     if ! climenu; then
         echo "$PROMPT" | instantmenu -bw 4 -l 20 -c
     else
-        echo "$PROMPT" | fzf --layout reverse --header-lines "$(expr $PROMPTHEIGHT - 1)" --prompt "- "
+        echo "$PROMPT" | fzf --layout reverse --header-lines "$(expr "$PROMPTHEIGHT" - 1)" --prompt "- "
     fi
     ;;
 -M) # message from stdin
-    PROMPT="$(cat /dev/stdin | sed 's/^/> /g')"
+    PROMPT="$(sed 's/^/> /g' </dev/stdin)"
     PROMPT="$PROMPT
 >
 OK"
@@ -161,10 +161,10 @@ OK"
             ANSWER=$(echo "$ASTDIN" | instantmenu -i -bw 4 -p "${2:-choose}" -c -l 20)
         else
             if grep -q '^>' <<<"$ASTDIN"; then
-                HEADERLINES=$(echo "$ASTDIN" | grep '^>' | wc -l)
-                ANSWER=$(echo "$ASTDIN" | fzf --layout reverse --header-lines "$HEADERLINES" --prompt "${2:-choose}")
+                HEADERLINES=$(echo "$ASTDIN" | grep -c '^>')
+                ANSWER="$(echo "$ASTDIN" | fzf --layout reverse --header-lines "$HEADERLINES" --prompt "${2:-choose}")"
             else
-                ANSWER=$(echo "$ASTDIN" | tac | fzf --prompt "${2:-choose}")
+                ANSWER="$(echo "$ASTDIN" | tac | fzf --prompt "${2:-choose}")"
             fi
         fi
         if grep -q "forcequit" <<<"$ANSWER"; then
@@ -183,7 +183,7 @@ OK"
     AFILE=/tmp/listfile
     cat /dev/stdin >"$AFILE"
     cat /dev/stdin
-    cat "$AFILE" | awk '{printf "%d %s\n", NR, $0}' | sed 's/^/[ ] /g' >"${AFILE}2"
+    awk '{printf "%d %s\n", NR, $0}' <"$AFILE" | sed 's/^/[ ] /g' >"${AFILE}2"
     echo "OK" >>"${AFILE}2"
     cat "${AFILE}2" >"$AFILE"
 
@@ -194,7 +194,7 @@ OK"
     }
 
     while ! [ "$ANSWER" = "OK" ]; do
-        ANSWER="$(cat "$AFILE" | imenu -l 'type ok to confirm')"
+        ANSWER="$(imenu -l 'type ok to confirm' <"$AFILE")"
         if grep -q '^OK' <<<"$ANSWER"; then
             quit
         fi
@@ -205,7 +205,7 @@ OK"
             else
                 NEWANSWER="$(echo "$ANSWER" | sed 's/^\[.\] /[ ] /g' | sed 's|/|\\/|g')"
             fi
-            sed -i "s/^\[.\] $LINENUMBER[^0-9][^0-9]*.*/$NEWANSWER/g" "$AFILE"
+            sed -i "s/^\[.\] ${LINENUMBER}[^0-9][^0-9]*.*/$NEWANSWER/g" "$AFILE"
         fi
     done
 
