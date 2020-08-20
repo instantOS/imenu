@@ -25,6 +25,7 @@ case "$1" in
         YESCOLOR=":gyes"
         NOCOLOR=":rno"
     fi
+
     if ! climenu; then
         if ! [ ${#2} -ge 30 ]; then
             ANSWER=$(echo "$YESCOLOR
@@ -79,13 +80,11 @@ $NOCOLOR" | instantmenu -bw 4 -c -l 100 -p "${2:-confirm} ")
     fi
 
     ;;
--w)
-    # waiting thingy
+-w) # waiting thingy
     echo "> $2
 :g OK" | instantmenu -h -1 -l 20 -c -bw 4 -w -1 -q "loading..." &
     ;;
--e)
-    # error message
+-e) # error message
     echo "> $2
 :r OK" | instantmenu -h -1 -l 20 -c -bw 4 -w -1 -q "error"
     ;;
@@ -179,8 +178,7 @@ OK"
 
     echo "$ANSWER"
     ;;
--b)
-    # checkbox functionality
+-b) # checkbox list
     # lets user toggle
     AFILE=/tmp/listfile
     cat /dev/stdin >"$AFILE"
@@ -213,4 +211,27 @@ OK"
 
     ;;
 
+-E) # edit list
+    numlines() {
+        nl | grep -o '[0-9].*' |
+            sed 's/^\([0-9]\)./\1 /g'
+    }
+
+    itemmenu() {
+        echo "move to top
+move up
+back
+move down
+move to the bottom" | imenu -l "$1"
+    }
+
+    echo "editing list"
+    LIST="$(cat /dev/stdin)"
+    ITEM="$(numlines <<<"$LIST" | grep "." | imenu -l "${2:-edit list}")"
+    ;;
+
+\
+    *)
+    echo "no valid option given"
+    ;;
 esac
