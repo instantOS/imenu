@@ -212,9 +212,20 @@ OK"
     ;;
 
 -E) # edit list
+    # add line numbers
     numlines() {
         nl | grep -o '[0-9].*' |
             sed 's/^\([0-9]\)./\1 /g'
+    }
+
+    # move line n up
+    linedown() {
+        sed "N;s/^$1 \(.*\)\n[0-9]* \(.*\)/$1 \2\n$(($1 + 1)) \1/g"
+    }
+
+    # move line n down
+    linedown() {
+        sed "N;s/^$(($1 - 1)) \(.*\)\n$1 \(.*\)/$(($1 - 1)) \2\n$1 \1/g"
     }
 
     itemmenu() {
@@ -225,13 +236,45 @@ move down
 move to the bottom" | imenu -l "$1"
     }
 
-    echo "editing list"
     LIST="$(cat /dev/stdin)"
-    ITEM="$(numlines <<<"$LIST" | grep "." | imenu -l "${2:-edit list}")"
+    while :; do
+        ITEM="$({
+            echo "Ok"
+            echo "$LIST"
+        } | numlines | grep "." | imenu -l "${2:-edit list}")"
+        case $ITEM in
+        Ok)
+            echo "$LIST"
+            exit
+            ;;
+        *)
+            ITEMCHOICE="$(itemmenu "$ITEM")"
+            ITEMNUMBER="$(grep -o '^[0-9]*' <<<"$ITEMCHOICE")"
+            case $ITEMCHOICE in
+            *up)
+                LIST="$(echo "$LIST" | lineup "$ITEMNUMBER")"
+                ;;
+            *down)
+                LIST="$(echo "$LIST" | linedown "$ITEMNUMBER")"
+                ;;
+            *top)
+                LIST="$(echo "$ITEMCHOICE" && sed "/^$ITEMNUMBER /d")"
+                ;;
+            *bottom)
+                LIST="$(sed "/^$ITEMNUMBER /d" && echo "$ITEMCHOICE")"
+                ;;
+            *)
+                true
+                ;;
+            esac
+
+            ;;
+        esac
+    done
+
     ;;
 
-\
-    *)
+*)
     echo "no valid option given"
     ;;
 esac
