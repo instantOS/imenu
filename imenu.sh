@@ -15,6 +15,10 @@ climenu() {
     [ -e /tmp/climenu ] || [ -n "$USECLIMENU" ]
 }
 
+echoerr() {
+    echo "$@" 1>&2
+}
+
 case "$1" in
 -c) # confirmation dialog with prompt $2
     if [ "$2" = "-i" ]; then
@@ -218,19 +222,25 @@ OK"
             sed 's/^\([0-9]\)./\1 /g'
     }
 
+    rmnums() {
+        LIST="$(sed 's/^[0-9] //g' <<<"$NUMBERLIST")"
+    }
+
     # move line n up
     linedown() {
         if [ "$1" -gt "$MAXNUMBER" ]; then
+            echo "$NUMBERLIST"
             return
         fi
         NUM2="$(($1 + 1))"
-        sed "$1{h;d};${NUM2}G"
+        sed "$1{h;d};${NUM2}G" </dev/stdin
     }
 
     # move line n down
     lineup() {
         if [ "$1" -lt 2 ]; then
-            return 1
+            echo "$NUMBERLIST"
+            return
         fi
         linedown "$(($1 - 1))"
     }
@@ -247,9 +257,10 @@ move to the bottom" | imenu -l "$1"
     MAXNUMBER="$(("$(wc -l <<<"$LIST")" - 1))"
 
     while :; do
+        NUMBERLIST="$(numlines <<<"$LIST")"
         ITEM="$({
             echo "Ok"
-            echo "$LIST" | numlines
+            echo "$NUMBERLIST"
         } | grep "." | imenu -l "${2:-edit list}")"
         case $ITEM in
         Ok)
@@ -258,19 +269,23 @@ move to the bottom" | imenu -l "$1"
             ;;
         *)
             ITEMCHOICE="$(itemmenu "$ITEM")"
-            ITEMNUMBER="$(grep -o '^[0-9]*' <<<"$ITEMCHOICE")"
+            ITEMNUMBER="$(grep -o '^[0-9]*' <<<"$ITEM")"
             case "$ITEMCHOICE" in
             *up)
-                LIST="$(echo "$LIST" | lineup "$ITEMNUMBER")"
+                NUMBERLIST="$(echo "$NUMBERLIST" | lineup "$ITEMNUMBER")"
+                rmnums
                 ;;
             *down)
-                LIST="$(echo "$LIST" | linedown "$ITEMNUMBER")"
+                NUMBERLIST="$(echo "$NUMBERLIST" | linedown "$ITEMNUMBER")"
+                rmnums
                 ;;
             *top)
-                LIST="$(echo "$ITEMCHOICE" && sed "/^$ITEMNUMBER /d")"
+                NUMBERLIST="$(echo "$ITEM" && sed "/^$ITEMNUMBER /d" <<<"$NUMBERLIST")"
+                rmnums
                 ;;
             *bottom)
-                LIST="$(sed "/^$ITEMNUMBER /d" && echo "$ITEMCHOICE")"
+                NUMBERLIST="$(sed "/^$ITEMNUMBER /d" <<<"$NUMBERLIST" && echo "$ITEM")"
+                rmnums
                 ;;
             *)
                 true
