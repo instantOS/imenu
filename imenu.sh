@@ -229,10 +229,10 @@ OK"
 
     # move line n down
     lineup() {
-        if [ "$1" = 0 ]; then
+        if [ "$1" -lt 2 ]; then
             return 1
         fi
-        linedown $(($1 - 1))
+        linedown "$(($1 - 1))"
     }
 
     itemmenu() {
