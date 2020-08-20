@@ -220,12 +220,19 @@ OK"
 
     # move line n up
     linedown() {
-        sed "N;s/^$1 \(.*\)\n[0-9]* \(.*\)/$1 \2\n$(($1 + 1)) \1/g"
+        if [ "$1" -gt "$MAXNUMBER" ]; then
+            return
+        fi
+        NUM2="$(($1 + 1))"
+        sed "$1{h;d};${NUM2}G"
     }
 
     # move line n down
-    linedown() {
-        sed "N;s/^$(($1 - 1)) \(.*\)\n$1 \(.*\)/$(($1 - 1)) \2\n$1 \1/g"
+    lineup() {
+        if [ "$1" = 0 ]; then
+            return 1
+        fi
+        linedown $(($1 - 1))
     }
 
     itemmenu() {
@@ -237,11 +244,13 @@ move to the bottom" | imenu -l "$1"
     }
 
     LIST="$(cat /dev/stdin)"
+    MAXNUMBER="$(("$(wc -l <<<"$LIST")" - 1))"
+
     while :; do
         ITEM="$({
             echo "Ok"
-            echo "$LIST"
-        } | numlines | grep "." | imenu -l "${2:-edit list}")"
+            echo "$LIST" | numlines
+        } | grep "." | imenu -l "${2:-edit list}")"
         case $ITEM in
         Ok)
             echo "$LIST"
@@ -250,7 +259,7 @@ move to the bottom" | imenu -l "$1"
         *)
             ITEMCHOICE="$(itemmenu "$ITEM")"
             ITEMNUMBER="$(grep -o '^[0-9]*' <<<"$ITEMCHOICE")"
-            case $ITEMCHOICE in
+            case "$ITEMCHOICE" in
             *up)
                 LIST="$(echo "$LIST" | lineup "$ITEMNUMBER")"
                 ;;
