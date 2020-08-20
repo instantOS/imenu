@@ -160,9 +160,18 @@ OK"
     ASTDIN="$(cat /dev/stdin)"
     ANSWER=""
 
+    if [ "$2" = "-i" ]; then
+        shift 1
+        ICONMODE=true
+    fi
+
     while ! grep -q .. <<<"$ANSWER"; do
         if ! climenu; then
-            ANSWER=$(echo "$ASTDIN" | instantmenu -i -bw 4 -p "${2:-choose}" -c -l 20)
+            if [ -z "$ICONMODE" ]; then
+                ANSWER=$(echo "$ASTDIN" | instantmenu -i -bw 4 -p "${2:-choose}" -c -l 20)
+            else
+                ANSWER=$(echo "$ASTDIN" | instantmenu -i -h -1 -w -1 -bw 4 -p "${2:-choose}" -c -l 20)
+            fi
         else
             if grep -q '^>' <<<"$ASTDIN"; then
                 HEADERLINES=$(echo "$ASTDIN" | grep -c '^>')
@@ -246,11 +255,19 @@ OK"
     }
 
     itemmenu() {
-        echo "move to top
+        if ! climenu; then
+            echo ":b move to top
+:b move up
+:b back
+:b move down
+:b move to the bottom" | imenu -l -i "$1"
+        else
+            echo "move to top
 move up
 back
 move down
 move to the bottom" | imenu -l "$1"
+        fi
     }
 
     LIST="$(cat /dev/stdin)"
