@@ -113,7 +113,7 @@ $NOCOLOR" | instantmenu -bw 4 -c -l 100 -p "${2:-confirm} ")
     ;;
 -i) # input dialog
     if ! climenu; then
-        echo "" | instantmenu -bw 4 -q "${3:-enter to confirm}" -p "${2:-enter text}" -c -w 800 -I
+        echo "" | instantmenu -h -1 -bw 4 -q "${3:-enter to confirm}" -p "${2:-enter text}" -c -w 800 -I
     else
         textbox() {
             unset user_input
@@ -130,14 +130,14 @@ $NOCOLOR" | instantmenu -bw 4 -c -l 100 -p "${2:-confirm} ")
     fi
     ;;
 -m) # message
-    PROMPT="$(sed 's/^/> /g' <<<$2)"
+    PROMPT="$(sed 's/^/> /g' <<<"$2")"
     PROMPT="$PROMPT
 >
 OK"
     PROMPTHEIGHT="$(wc -l <<<"$PROMPT")"
 
     if ! climenu; then
-        echo "$PROMPT" | instantmenu -bw 4 -l 20 -c
+        echo "$PROMPT" | instantmenu -bw 4 -l 20 -c -q "$2"
     else
         echo "$PROMPT" | fzf --layout reverse --header-lines "$(expr "$PROMPTHEIGHT" - 1)" --prompt "- "
     fi
@@ -150,9 +150,14 @@ OK"
     PROMPTHEIGHT=$(wc -l <<<"$PROMPT")
 
     if ! climenu; then
-        echo "$PROMPT" | instantmenu -bw 4 -l 20 -c
+        if [ "$PROMPTHEIGHT" -lt 6 ]
+        then
+            echo "$PROMPT" | instantmenu -bw 4 -h -1 -l 20 -c -q "$2"
+        else
+            echo "$PROMPT" | instantmenu -bw 4 -l 20 -c -q "$2"
+        fi
     else
-        echo "$PROMPT" | fzf --layout reverse --header-lines "$(expr $PROMPTHEIGHT - 1)" --prompt "- "
+        echo "$PROMPT" | fzf --layout reverse --header-lines "$((PROMPTHEIGHT - 1))" --prompt "- "
     fi
     ;;
 
