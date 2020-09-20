@@ -150,8 +150,7 @@ OK"
     PROMPTHEIGHT=$(wc -l <<<"$PROMPT")
 
     if ! climenu; then
-        if [ "$PROMPTHEIGHT" -lt 6 ]
-        then
+        if [ "$PROMPTHEIGHT" -lt 6 ]; then
             echo "$PROMPT" | instantmenu -bw 4 -h -1 -l 20 -c -q "$2"
         else
             echo "$PROMPT" | instantmenu -bw 4 -l 20 -c -q "$2"
@@ -265,7 +264,8 @@ OK"
 :b move up
 :b back
 :b move down
-:b move to the bottom" | imenu -l -i "$1"
+:b move to the bottom
+:r remove" | imenu -l -i "$1"
         else
             echo "move to top
 move up
@@ -275,6 +275,13 @@ move to the bottom" | imenu -l "$1"
         fi
     }
 
+    if [ -n "$2" ]
+    then
+        ITEMCOMMAND="$2"
+    else
+        ITEMCOMMAND="ls ~/ | imenu -l"
+    fi
+
     LIST="$(cat /dev/stdin)"
     MAXNUMBER="$(("$(wc -l <<<"$LIST")" - 1))"
 
@@ -282,12 +289,22 @@ move to the bottom" | imenu -l "$1"
         NUMBERLIST="$(numlines <<<"$LIST")"
         ITEM="$({
             echo "Ok"
+            echo "Add item"
             echo "$NUMBERLIST"
         } | grep "." | imenu -l "${2:-edit list}")"
-        case $ITEM in
+        case "$ITEM" in
         Ok)
             echo "$LIST"
             exit
+            ;;
+        "Add item")
+            ADDEDITEM="$($ITEMCOMMAND)"
+            if [ -n "$ADDEDITEM" ]; then
+                LIST="$LIST
+$ADDEDITEM"
+            fi
+            continue
+
             ;;
         *)
             ITEMCHOICE="$(itemmenu "$ITEM")"
@@ -307,6 +324,10 @@ move to the bottom" | imenu -l "$1"
                 ;;
             *bottom)
                 NUMBERLIST="$(sed "/^$ITEMNUMBER /d" <<<"$NUMBERLIST" && echo "$ITEM")"
+                rmnums
+                ;;
+            *remove)
+                NUMBERLIST="$(sed "/^$ITEMNUMBER /d" <<< "$NUMBERLIST")"
                 rmnums
                 ;;
             *)
