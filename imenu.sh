@@ -85,12 +85,23 @@ $NOCOLOR" | instantmenu -bw 4 -c -l 100 -p "${2:-confirm} ")
 
     ;;
 -w) # waiting thingy
-    echo "> $2
+    if ! climenu; then
+        echo "> $2
 :g OK" | instantmenu -h -1 -l 20 -c -bw 4 -w -1 -q "loading..." &
+    else
+        echo "loading...
+$2" | imenu -M
+    fi
     ;;
 -e) # error message
-    echo "> $2
+    if ! climenu; then
+        echo "> $2
 :r OK" | instantmenu -h -1 -l 20 -c -bw 4 -w -1 -q "error"
+
+    else
+        echo "Error
+$2" | imenu -M
+    fi
     ;;
 
 -P) # password dialog
@@ -139,7 +150,7 @@ OK"
     if ! climenu; then
         echo "$PROMPT" | instantmenu -bw 4 -l 20 -c -q "$2"
     else
-        echo "$PROMPT" | fzf --layout reverse --header-lines "$(expr "$PROMPTHEIGHT" - 1)" --prompt "- "
+        echo "$PROMPT" | fzf --layout reverse --header-lines "$(( PROMPTHEIGHT - 1))" --prompt "- "
     fi
     ;;
 -M) # message from stdin
@@ -275,8 +286,7 @@ move to the bottom" | imenu -l "$1"
         fi
     }
 
-    if [ -n "$2" ]
-    then
+    if [ -n "$2" ]; then
         ITEMCOMMAND="$2"
     else
         ITEMCOMMAND="ls ~/ | imenu -l"
@@ -327,7 +337,7 @@ $ADDEDITEM"
                 rmnums
                 ;;
             *remove)
-                NUMBERLIST="$(sed "/^$ITEMNUMBER /d" <<< "$NUMBERLIST")"
+                NUMBERLIST="$(sed "/^$ITEMNUMBER /d" <<<"$NUMBERLIST")"
                 rmnums
                 ;;
             *)
