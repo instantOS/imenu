@@ -199,7 +199,7 @@ OK"
             exit 1
         fi
 
-        if ! grep -Fxq "$ANSWER" <<<"$ASTDIN" || grep '^>' <<<"$ANSWER"; then
+        if ! grep -Fxq -- "$ANSWER" <<<"$ASTDIN" || grep '^>' <<<"$ANSWER"; then
             ANSWER=""
         fi
     done
