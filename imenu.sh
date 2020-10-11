@@ -180,12 +180,20 @@ OK"
         ICONMODE=true
     fi
 
+    if [ "$2" = "-s" ] && [ -n "$3" ]
+    then
+        PRESELECT="$3"
+        shift 2
+    else
+        PRESELECT="0"
+    fi
+
     while ! grep -q .. <<<"$ANSWER"; do
         if ! climenu; then
             if [ -z "$ICONMODE" ]; then
-                ANSWER=$(echo "$ASTDIN" | instantmenu -i -bw 4 -p "${2:-choose}" -c -l 20)
+                ANSWER=$(echo "$ASTDIN" | instantmenu -ps "$PRESELECT" -i -bw 4 -p "${2:-choose}" -c -l 20)
             else
-                ANSWER=$(echo "$ASTDIN" | instantmenu -i -h -1 -w -1 -bw 4 -p "${2:-choose}" -c -l 20)
+                ANSWER=$(echo "$ASTDIN" | instantmenu -ps "$PRESELECT" -i -h -1 -w -1 -bw 4 -p "${2:-choose}" -c -l 20)
             fi
         else
             if grep -q '^>' <<<"$ASTDIN"; then
@@ -241,13 +249,14 @@ OK"
 
 -E) # edit list
     # add line numbers
+    shift 1
     numlines() {
-        nl | grep -o '[0-9].*' |
-            sed 's/^\([0-9]\)./\1 /g'
+        nl | grep -o '[0-9][0-9]*.*' |
+            sed 's/^\([0-9][0-9]*\)./\1 /g'
     }
 
     rmnums() {
-        LIST="$(sed 's/^[0-9] //g' <<<"$NUMBERLIST")"
+        LIST="$(sed 's/^[0-9]* //g' <<<"$NUMBERLIST")"
     }
 
     # move line n up
@@ -276,7 +285,7 @@ OK"
 :b back
 :b move down
 :b move to the bottom
-:r remove" | imenu -l -i "$1"
+:r remove" | imenu -l -i -s 2 "$1"
         else
             echo "move to top
 move up
@@ -297,18 +306,19 @@ move to the bottom" | imenu -l "$1"
 
     while :; do
         NUMBERLIST="$(numlines <<<"$LIST")"
+        LPRESELECT="${ITEMNUMBER:-0}" 
         ITEM="$({
-            echo "Ok"
+            echo ":gOk"
             echo "Add item"
             echo "$NUMBERLIST"
-        } | grep "." | imenu -l "${2:-edit list}")"
+        } | grep "." | imenu -l -s "$((LPRESELECT + 1))" "${1:-edit list}")"
         case "$ITEM" in
-        Ok)
+        *Ok)
             echo "$LIST"
             exit
             ;;
         "Add item")
-            ADDEDITEM="$($ITEMCOMMAND)"
+            ADDEDITEM="$(eval "$ITEMCOMMAND")"
             if [ -n "$ADDEDITEM" ]; then
                 LIST="$LIST
 $ADDEDITEM"
