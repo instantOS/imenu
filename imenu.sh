@@ -124,7 +124,11 @@ $2" | imenu -M
     ;;
 -i) # input dialog
     if ! climenu; then
-        echo "" | instantmenu -h -1 -bw 4 -q "${3:-enter to confirm}" -p "${2:-enter text}" -c -w 800 -I
+        if [ -z "$4" ]; then
+            echo "" | instantmenu -h -1 -bw 4 -q "${3:-enter to confirm}" -p "${2:-enter text}" -c -w 800 -I
+        else
+            echo "" | instantmenu -it "$4" -h -1 -bw 4 -q "${3:-enter to confirm}" -p "${2:-enter text}" -c -w 800 -I
+        fi
     else
         textbox() {
             unset user_input
@@ -150,7 +154,7 @@ OK"
     if ! climenu; then
         echo "$PROMPT" | instantmenu -bw 4 -l 20 -c -q "$2"
     else
-        echo "$PROMPT" | fzf --layout reverse --header-lines "$(( PROMPTHEIGHT - 1))" --prompt "- "
+        echo "$PROMPT" | fzf --layout reverse --header-lines "$((PROMPTHEIGHT - 1))" --prompt "- "
     fi
     ;;
 -M) # message from stdin
@@ -180,8 +184,7 @@ OK"
         ICONMODE=true
     fi
 
-    if [ "$2" = "-s" ] && [ -n "$3" ]
-    then
+    if [ "$2" = "-s" ] && [ -n "$3" ]; then
         PRESELECT="$3"
         shift 2
     else
@@ -306,7 +309,7 @@ move to the bottom" | imenu -l "$1"
 
     while :; do
         NUMBERLIST="$(numlines <<<"$LIST")"
-        LPRESELECT="${ITEMNUMBER:-0}" 
+        LPRESELECT="${ITEMNUMBER:-0}"
         ITEM="$({
             echo ":gOk"
             echo "Add item"
