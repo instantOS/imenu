@@ -65,10 +65,14 @@ $NOCOLOR" | instantmenu -bw 4 -c -l 100 -p "${2:-confirm} ")
 > 
 :gyes
 :rno"
+
+PSITEM="$(($(wc -l <<< "$PROMPT") - 2))"
+
+echo "$PSITEM"
     if ! climenu; then
         while ! grep -Eq '^(:gyes|:rno|forcequit)$' <<<"$ANSWER"; do
             ANSWER=$(echo "$PROMPT" | sed 's/^$/> /g' | sed 's/^yes$/:gyes/g' |
-                sed 's/^no$/:rno/g' | instantmenu -bw 4 -c -l 100 -q 'confirmation')
+                sed 's/^no$/:rno/g' | instantmenu -ps "$PSITEM" -bw 4 -c -l 100 -q 'confirmation')
         done
     else
         while ! grep -Eq '^(yes|no|forcequit)$' <<<"$ANSWER"; do
