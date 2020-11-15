@@ -66,9 +66,9 @@ $NOCOLOR" | instantmenu -bw 4 -c -l 100 -p "${2:-confirm} ")
 :gyes
 :rno"
 
-PSITEM="$(($(wc -l <<< "$PROMPT") - 2))"
+    PSITEM="$(($(wc -l <<<"$PROMPT") - 2))"
 
-echo "$PSITEM"
+    echo "$PSITEM"
     if ! climenu; then
         while ! grep -Eq '^(:gyes|:rno|forcequit)$' <<<"$ANSWER"; do
             ANSWER=$(echo "$PROMPT" | sed 's/^$/> /g' | sed 's/^yes$/:gyes/g' |
@@ -208,6 +208,11 @@ OK"
                 ANSWER="$(echo "$ASTDIN" | fzf --layout reverse --header-lines "$HEADERLINES" --prompt "${2:-choose}")"
             else
                 ANSWER="$(echo "$ASTDIN" | tac | fzf --prompt "${2:-choose}")"
+            fi
+        fi
+        if [ -z "$ANSWER" ]; then
+            if [ -n "$IMENUACCEPTEMPTY" ]; then
+                exit 0
             fi
         fi
         if grep -q "forcequit" <<<"$ANSWER"; then
