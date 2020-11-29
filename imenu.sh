@@ -30,28 +30,37 @@ case "$1" in
         NOCOLOR=":rno"
     fi
 
-    if ! climenu; then
-        if ! [ ${#2} -ge 30 ]; then
-            ANSWER=$(echo "$YESCOLOR
-$NOCOLOR" | instantmenu -w 300 -bw 4 -c -l 100 -p "${2:-confirm} ")
+    unset ANSWER
+    while [ -z "$ANSWER" ]; do
+        if ! climenu; then
+            if ! [ ${#2} -ge 30 ]; then
+                ANSWER=$(echo "$YESCOLOR
+    $NOCOLOR" | instantmenu -w 300 -bw 4 -c -l 100 -p "${2:-confirm} ")
+            else
+                ANSWER=$(echo "$YESCOLOR
+    $NOCOLOR" | instantmenu -bw 4 -c -l 100 -p "${2:-confirm} ")
+            fi
         else
-            ANSWER=$(echo "$YESCOLOR
-$NOCOLOR" | instantmenu -bw 4 -c -l 100 -p "${2:-confirm} ")
-        fi
-    else
-        #dialog confirm promt that returns exit status
+            #dialog confirm promt that returns exit status
 
-        confirm() {
-            DIATEXT=${1:-are you sure about that?}
-            dialog --yesno "$DIATEXT" 700 600
-        }
+            confirm() {
+                DIATEXT=${1:-are you sure about that?}
+                dialog --yesno "$DIATEXT" 700 600
+            }
 
-        if confirm "$2"; then
-            ANSWER="yes"
-        else
-            ANSWER="no"
+            if confirm "$2"; then
+                ANSWER="yes"
+            else
+                ANSWER="no"
+            fi
         fi
-    fi
+
+        if [ -z "$ANSWER" ] && [ -n "$IMENUACCEPTEMPTY" ]; then
+            echo "empty"
+            exit 2
+        fi
+
+    done
 
     if grep -q "yes" <<<"${ANSWER}"; then
         exit 0
@@ -68,18 +77,30 @@ $NOCOLOR" | instantmenu -bw 4 -c -l 100 -p "${2:-confirm} ")
 
     PSITEM="$(($(wc -l <<<"$PROMPT") - 2))"
 
+    checkexit() {
+        if [ -z "$ANSWER" ] && [ -n "$IMENUACCEPTEMPTY" ]; then
+            echo "empty"
+            exit 2
+        fi
+    }
     echo "$PSITEM"
-    if ! climenu; then
-        while ! grep -Eq '^(:gyes|:rno|forcequit)$' <<<"$ANSWER"; do
-            ANSWER=$(echo "$PROMPT" | sed 's/^$/> /g' | sed 's/^yes$/:gyes/g' |
-                sed 's/^no$/:rno/g' | instantmenu -ps "$PSITEM" -bw 4 -c -l 100 -q 'confirmation')
-        done
-    else
-        while ! grep -Eq '^(yes|no|forcequit)$' <<<"$ANSWER"; do
-            PROMPTHEIGHT=$(wc -l <<<"$PROMPT")
-            ANSWER=$(echo "$PROMPT" | sed 's/^:.//g' | fzf --header-lines "$(expr "$PROMPTHEIGHT" - 2)" --layout reverse --prompt "? ")
-        done
-    fi
+    unset ANSWER
+    while [ -z "$ANSWER" ]; do
+        if ! climenu; then
+            while ! grep -Eq '^(:gyes|:rno|forcequit)$' <<<"$ANSWER"; do
+                ANSWER=$(echo "$PROMPT" | sed 's/^$/> /g' | sed 's/^yes$/:gyes/g' |
+                    sed 's/^no$/:rno/g' | instantmenu -ps "$PSITEM" -bw 4 -c -l 100 -q 'confirmation')
+                    checkexit
+            done
+        else
+            while ! grep -Eq '^(yes|no|forcequit)$' <<<"$ANSWER"; do
+                PROMPTHEIGHT=$(wc -l <<<"$PROMPT")
+                ANSWER=$(echo "$PROMPT" | sed 's/^:.//g' | fzf --header-lines "$((PROMPTHEIGHT - 2))" --layout reverse --prompt "? ")
+                checkexit
+            done
+        fi
+
+    done
 
     if grep -q "yes" <<<"${ANSWER}"; then
         exit 0
@@ -210,10 +231,8 @@ OK"
                 ANSWER="$(echo "$ASTDIN" | tac | fzf --prompt "${2:-choose}")"
             fi
         fi
-        if [ -z "$ANSWER" ]; then
-            if [ -n "$IMENUACCEPTEMPTY" ]; then
-                exit 0
-            fi
+        if [ -z "$ANSWER" ] && [ -n "$IMENUACCEPTEMPTY" ]; then
+            exit 0
         fi
         if grep -q "forcequit" <<<"$ANSWER"; then
             exit 1
