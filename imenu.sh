@@ -35,10 +35,10 @@ case "$1" in
         if ! climenu; then
             if ! [ ${#2} -ge 30 ]; then
                 ANSWER=$(echo "$YESCOLOR
-    $NOCOLOR" | instantmenu -w 300 -bw 4 -c -l 100 -p "${2:-confirm} ")
+$NOCOLOR" | instantmenu -w 300 -bw 4 -c -l 100 -p "${2:-confirm} ")
             else
                 ANSWER=$(echo "$YESCOLOR
-    $NOCOLOR" | instantmenu -bw 4 -c -l 100 -p "${2:-confirm} ")
+$NOCOLOR" | instantmenu -bw 4 -c -l 100 -p "${2:-confirm} ")
             fi
         else
             #dialog confirm promt that returns exit status
@@ -90,7 +90,7 @@ case "$1" in
             while ! grep -Eq '^(:gyes|:rno|forcequit)$' <<<"$ANSWER"; do
                 ANSWER=$(echo "$PROMPT" | sed 's/^$/> /g' | sed 's/^yes$/:gyes/g' |
                     sed 's/^no$/:rno/g' | instantmenu -ps "$PSITEM" -bw 4 -c -l 100 -q 'confirmation')
-                    checkexit
+                checkexit
             done
         else
             while ! grep -Eq '^(yes|no|forcequit)$' <<<"$ANSWER"; do
