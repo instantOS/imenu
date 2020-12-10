@@ -200,6 +200,9 @@ OK"
     fi
     ;;
 
+-t) # show an android like toast
+    echo "> $2" | instantmenu -T 35 -w -1 -l 10 -bw 5 -x 1000000 -y -1 -q 'alert' &
+    ;;
 -l) # choose item from list
     ASTDIN="$(cat /dev/stdin)"
     ANSWER=""
