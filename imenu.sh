@@ -283,6 +283,7 @@ OK"
 
 -E) # edit list
     # add line numbers
+    # echo list | imenu -E addcommand
     shift 1
     numlines() {
         nl | grep -o '[0-9][0-9]*.*' |
@@ -329,8 +330,8 @@ move to the bottom" | imenu -l "$1"
         fi
     }
 
-    if [ -n "$2" ]; then
-        ITEMCOMMAND="$2"
+    if [ -n "$1" ]; then
+        ITEMCOMMAND="$1"
     else
         ITEMCOMMAND="ls ~/ | imenu -l"
     fi
@@ -342,8 +343,10 @@ move to the bottom" | imenu -l "$1"
         NUMBERLIST="$(numlines <<<"$LIST")"
         LPRESELECT="${ITEMNUMBER:-0}"
         ITEM="$({
-            echo ":gOk"
-            echo "Add item"
+            # TODO: add checkmark
+            echo ":g   Ok"
+            # TODO: add plus sign
+            echo ":g   Add item"
             echo "$NUMBERLIST"
         } | grep "." | imenu -l -s "$((LPRESELECT + 1))" "${1:-edit list}")"
         case "$ITEM" in
@@ -351,7 +354,7 @@ move to the bottom" | imenu -l "$1"
             echo "$LIST"
             exit
             ;;
-        "Add item")
+        ":g   Add item")
             ADDEDITEM="$(eval "$ITEMCOMMAND")"
             if [ -n "$ADDEDITEM" ]; then
                 LIST="$LIST
