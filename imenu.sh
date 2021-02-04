@@ -283,7 +283,7 @@ OK"
 
 -E) # edit list
     # add line numbers
-    # echo list | imenu -E addcommand
+    # echo list | imenu -E title addcommand
     shift 1
     numlines() {
         nl | grep -o '[0-9][0-9]*.*' |
@@ -330,8 +330,8 @@ move to the bottom" | imenu -l "$1"
         fi
     }
 
-    if [ -n "$1" ]; then
-        ITEMCOMMAND="$1"
+    if [ -n "$2" ]; then
+        ITEMCOMMAND="$2"
     else
         ITEMCOMMAND="ls ~/ | imenu -l"
     fi
