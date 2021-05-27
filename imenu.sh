@@ -89,7 +89,7 @@ $NOCOLOR" | instantmenu -bw 4 -c -l 100 -p "${2:-confirm} ")
         if ! climenu; then
             while ! grep -Eq '^(:gyes|:rno|forcequit)$' <<<"$ANSWER"; do
                 ANSWER=$(echo "$PROMPT" | sed 's/^$/> /g' | sed 's/^yes$/:gyes/g' |
-                    sed 's/^no$/:rno/g' | instantmenu -ps "$PSITEM" -bw 4 -c -l 100 -q 'confirmation')
+                    sed 's/^no$/:rno/g' | instantmenu -ps "$PSITEM" -bw 4 -c -l 100 -r -q 'confirmation')
                 checkexit
             done
         else
