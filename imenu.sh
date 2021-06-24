@@ -19,6 +19,36 @@ echoerr() {
     echo "$@" 1>&2
 }
 
+echohelp() {
+    echo "imenu: instantmenu/fzf wrapper to quickly create simple interfaces
+usage: imenu [OPTION]
+        -c <title> [-i]
+           confirmation prompt, pass -i to invert the result
+        -C <title>
+           multi line confirmation prompt with message from stdin
+        -P <prompt name>
+           password prompt
+        -w <message>
+           display loading message
+        -e <message>
+           display error message
+        -i <title>
+           ask user for a single line of input
+        -m <message>
+           display message
+        -M
+           display multi line message from stdin
+        -t
+           display toast message
+        -l
+           choose item from stdin
+        -b
+           checkbox list to choose multiple items from stdin
+        -E <addcommand>
+           edit list from stdin, adding an item executes <addcommand>
+"
+}
+
 case "$1" in
 -c) # confirmation dialog with prompt $2
     if [ "$2" = "-i" ]; then
@@ -399,6 +429,6 @@ $ADDEDITEM"
     ;;
 
 *)
-    echo "no valid option given"
+    echohelp
     ;;
 esac
