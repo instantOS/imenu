@@ -259,9 +259,9 @@ OK"
         else
             if grep -q '^>' <<<"$ASTDIN"; then
                 HEADERLINES=$(echo "$ASTDIN" | grep -c '^>')
-                ANSWER="$(echo "$ASTDIN" | fzf --layout reverse --header-lines "$HEADERLINES" --prompt "${2:-choose}")"
+                ANSWER="$(echo "$ASTDIN" | fzf --layout reverse --header-lines "$HEADERLINES" --prompt "${2:-choose}> ")"
             else
-                ANSWER="$(echo "$ASTDIN" | tac | fzf --prompt "${2:-choose}")"
+                ANSWER="$(echo "$ASTDIN" | tac | fzf --prompt "${2:-choose}> ")"
             fi
         fi
         if [ -z "$ANSWER" ] && [ -n "$IMENUACCEPTEMPTY" ]; then
