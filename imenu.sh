@@ -4,9 +4,9 @@
 ## build menus and GUIs with just instantMENU ##
 ################################################
 
-# needs instantmenu, fzf and dialog
+# needs instantmenu, fzf and gum
 
-if [ "$1" = "cli" ]; then
+if [ "$1" = "cli" ] || [ "$1" = "--cli" ]; then
     shift 1
     USECLIMENU="True"
 fi
@@ -22,6 +22,8 @@ echoerr() {
 echohelp() {
     echo "imenu: instantmenu/fzf wrapper to quickly create simple interfaces
 usage: imenu [OPTION]
+        --cli
+           use cli version instead of gui
         -c <title> [-i]
            confirmation prompt, pass -i to invert the result
         -C <title>
@@ -71,11 +73,11 @@ $NOCOLOR" | instantmenu -w 300 -bw 4 -c -l 100 -p "${2:-confirm} ")
 $NOCOLOR" | instantmenu -bw 4 -c -l 100 -p "${2:-confirm} ")
             fi
         else
-            #dialog confirm promt that returns exit status
 
+            #gum confirm promt that returns exit status
             confirm() {
                 DIATEXT=${1:-are you sure about that?}
-                dialog --yesno "$DIATEXT" 700 600
+                gum confirm "$DIATEXT"
             }
 
             if confirm "$2"; then
@@ -159,17 +161,15 @@ $2" | imenu -M
     fi
     ;;
 
--P) # password dialog
+-P) # password prompt
     if ! climenu; then
         echo "" | instantmenu -bw 4 -p "${2:-enter password}" -P -c -w 800
     else
         passwordbox() {
             unset user_input
             while [ -z "$user_input" ]; do
-                #statements
                 user_input=$(
-                    dialog --passwordbox "${1:-enter password}" 700 700 \
-                        3>&1 1>&2 2>&3 3>&-
+                    gum input --password --prompt "${1:-enter password}> "
                 )
             done
             echo "$user_input"
@@ -177,7 +177,7 @@ $2" | imenu -M
         passwordbox "${2:-enter password}"
     fi
     ;;
--i) # input dialog
+-i) # input prompt
     if ! climenu; then
         if [ -z "$4" ]; then
             echo "" | instantmenu -h -1 -bw 4 -q "${3:-enter to confirm}" -p "${2:-enter text}" -c -w 800 -I
@@ -190,8 +190,7 @@ $2" | imenu -M
             while [ -z "$user_input" ]; do
                 #statements
                 user_input=$(
-                    dialog --inputbox "${1:-enter text}" 700 700 \
-                        3>&1 1>&2 2>&3 3>&-
+                    gum input --prompt "${1:-enter text}> "
                 )
             done
             echo "$user_input"
