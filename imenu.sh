@@ -55,11 +55,11 @@ case "$1" in
 -c) # confirmation dialog with prompt $2
     if [ "$2" = "-i" ]; then
         shift 1
-        YESCOLOR=":ryes"
-        NOCOLOR=":gno"
+        YESCOLOR="{red} yes"
+        NOCOLOR="{green} no"
     else
-        YESCOLOR=":gyes"
-        NOCOLOR=":rno"
+        YESCOLOR="{green} yes"
+        NOCOLOR="{red} no"
     fi
 
     unset ANSWER
@@ -67,10 +67,19 @@ case "$1" in
         if ! climenu; then
             if ! [ ${#2} -ge 30 ]; then
                 ANSWER=$(echo "$YESCOLOR
-$NOCOLOR" | instantmenu -w 300 -bw 4 -c -l 100 -p "${2:-confirm} ")
+$NOCOLOR" | instantmenu \
+                    --width 300 \
+                    --border-width 4 \
+                    --position center \
+                    --lines 100 \
+                    --prompt "${2:-confirm} ")
             else
                 ANSWER=$(echo "$YESCOLOR
-$NOCOLOR" | instantmenu -bw 4 -c -l 100 -p "${2:-confirm} ")
+$NOCOLOR" | instantmenu \
+                    --border-width 4 \
+                    --position center \
+                    --lines 100 \
+                    --prompt "${2:-confirm} ")
             fi
         else
 
@@ -101,11 +110,11 @@ $NOCOLOR" | instantmenu -bw 4 -c -l 100 -p "${2:-confirm} ")
     fi
     ;;
 -C) # confirmation dialog with prompt from stdin
-    PROMPT="$(sed 's/^/> /g' </dev/stdin)"
+    PROMPT="$(sed 's/^/{heading} /g' </dev/stdin)"
     PROMPT="$PROMPT
-> 
-:gyes
-:rno"
+{heading} 
+{green} yes
+{red} no"
 
     PSITEM="$(($(wc -l <<<"$PROMPT") - 2))"
 
@@ -119,15 +128,21 @@ $NOCOLOR" | instantmenu -bw 4 -c -l 100 -p "${2:-confirm} ")
     unset ANSWER
     while [ -z "$ANSWER" ]; do
         if ! climenu; then
-            while ! grep -Eq '^(:gyes|:rno|forcequit)$' <<<"$ANSWER"; do
-                ANSWER=$(echo "$PROMPT" | sed 's/^$/> /g' | sed 's/^yes$/:gyes/g' |
-                    sed 's/^no$/:rno/g' | instantmenu -ps "$PSITEM" -bw 4 -c -l 100 -r -q 'confirmation')
+            while ! grep -Eq '^(yes|no|forcequit)$' <<<"$ANSWER"; do
+                ANSWER=$(echo "$PROMPT" | grep '.' | instantmenu \
+                        --preselect "$PSITEM" \
+                        --border-width 4 \
+                        --position center \
+                        --lines 100 \
+                        --reject-no-match \
+                        --placeholder 'confirmation')
                 checkexit
             done
         else
             while ! grep -Eq '^(yes|no|forcequit)$' <<<"$ANSWER"; do
                 PROMPTHEIGHT=$(wc -l <<<"$PROMPT")
-                ANSWER=$(echo "$PROMPT" | sed 's/^:.//g' | fzf --header-lines "$((PROMPTHEIGHT - 2))" --layout reverse --prompt "? ")
+                ANSWER=$(echo "$PROMPT" | sed -E 's/\{[^{}]*\} //g; s/^(\{[^{}]*\})+//g' |
+                    fzf --header-lines "$((PROMPTHEIGHT - 2))" --layout reverse --prompt "? ")
                 checkexit
             done
         fi
@@ -143,8 +158,14 @@ $NOCOLOR" | instantmenu -bw 4 -c -l 100 -p "${2:-confirm} ")
     ;;
 -w) # waiting thingy
     if ! climenu; then
-        echo "> $2
-:g OK" | instantmenu -h -1 -l 20 -c -bw 4 -w -1 -q "loading..." &
+        echo "{heading} $2
+{green icon=hourglass-end} OK" | instantmenu \
+            --line-height auto \
+            --lines 20 \
+            --position center \
+            --border-width 4 \
+            --width auto \
+            --placeholder "loading..." &
     else
         echo "loading...
 $2" | imenu -M
@@ -152,8 +173,14 @@ $2" | imenu -M
     ;;
 -e) # error message
     if ! climenu; then
-        echo "> $2
-:r OK" | instantmenu -h -1 -l 20 -c -bw 4 -w -1 -q "error"
+        echo "{heading} $2
+{red icon=circle-exclamation} OK" | instantmenu \
+            --line-height auto \
+            --lines 20 \
+            --position center \
+            --border-width 4 \
+            --width auto \
+            --placeholder "error"
 
     else
         echo "Error
@@ -163,7 +190,12 @@ $2" | imenu -M
 
 -P) # password prompt
     if ! climenu; then
-        echo "" | instantmenu -bw 4 -p "${2:-enter password}" -P -c -w 800
+        echo "" | instantmenu \
+            --border-width 4 \
+            --prompt "${2:-enter password}" \
+            --password \
+            --position center \
+            --width 800
     else
         passwordbox() {
             unset user_input
@@ -180,9 +212,24 @@ $2" | imenu -M
 -i) # input prompt
     if ! climenu; then
         if [ -z "$4" ]; then
-            echo "" | instantmenu -h -1 -bw 4 -q "${3:-enter to confirm}" -p "${2:-enter text}" -c -w 800 -I
+            echo "" | instantmenu \
+                --line-height auto \
+                --border-width 4 \
+                --placeholder "${3:-enter to confirm}" \
+                --prompt "${2:-enter text}" \
+                --position center \
+                --width 800 \
+                --input-only
         else
-            echo "" | instantmenu -it "$4" -h -1 -bw 4 -q "${3:-enter to confirm}" -p "${2:-enter text}" -c -w 800 -I
+            echo "" | instantmenu \
+                --initial-text "$4" \
+                --line-height auto \
+                --border-width 4 \
+                --placeholder "${3:-enter to confirm}" \
+                --prompt "${2:-enter text}" \
+                --position center \
+                --width 800 \
+                --input-only
         fi
     else
         textbox() {
@@ -199,30 +246,43 @@ $2" | imenu -M
     fi
     ;;
 -m) # message
-    PROMPT="$(sed 's/^/> /g' <<<"$2")"
+    PROMPT="$(sed 's/^/{heading} /g' <<<"$2")"
     PROMPT="$PROMPT
->
+{heading}
 OK"
     PROMPTHEIGHT="$(wc -l <<<"$PROMPT")"
 
     if ! climenu; then
-        echo "$PROMPT" | instantmenu -bw 4 -l 20 -c -q "$2"
+        echo "$PROMPT" | instantmenu \
+            --border-width 4 \
+            --lines 20 \
+            --position center \
+            --placeholder "$2"
     else
         echo "$PROMPT" | fzf --layout reverse --header-lines "$((PROMPTHEIGHT - 1))" --prompt "- "
     fi
     ;;
 -M) # message from stdin
-    PROMPT="$(sed 's/^/> /g' </dev/stdin)"
+    PROMPT="$(sed 's/^/{heading} /g' </dev/stdin)"
     PROMPT="$PROMPT
->
+{heading}
 OK"
     PROMPTHEIGHT=$(wc -l <<<"$PROMPT")
 
     if ! climenu; then
         if [ "$PROMPTHEIGHT" -lt 6 ]; then
-            echo "$PROMPT" | instantmenu -bw 4 -h -1 -l 20 -c -q "$2"
+            echo "$PROMPT" | instantmenu \
+                --border-width 4 \
+                --line-height auto \
+                --lines 20 \
+                --position center \
+                --placeholder "$2"
         else
-            echo "$PROMPT" | instantmenu -bw 4 -l 20 -c -q "$2"
+            echo "$PROMPT" | instantmenu \
+                --border-width 4 \
+                --lines 20 \
+                --position center \
+                --placeholder "$2"
         fi
     else
         echo "$PROMPT" | fzf --layout reverse --header-lines "$((PROMPTHEIGHT - 1))" --prompt "- "
@@ -230,7 +290,14 @@ OK"
     ;;
 
 -t) # show an android like toast
-    echo "> $2" | instantmenu -T 35 -w -1 -l 10 -bw 5 -x 1000000 -y -1 -q 'alert' &
+    echo "{heading} $2" | instantmenu \
+        --toast 3.5 \
+        --width auto \
+        --lines 10 \
+        --border-width 5 \
+        --x-offset 1000000 \
+        --y-offset -1 \
+        --placeholder 'alert' &
     ;;
 -l) # choose item from list
     ASTDIN="$(cat /dev/stdin)"
@@ -251,13 +318,27 @@ OK"
     while ! grep -q .. <<<"$ANSWER"; do
         if ! climenu; then
             if [ -z "$ICONMODE" ]; then
-                ANSWER=$(echo "$ASTDIN" | instantmenu -ps "$PRESELECT" -i -bw 4 -p "${2:-choose}" -c -l 20)
+                ANSWER=$(echo "$ASTDIN" | instantmenu \
+                    --preselect "$PRESELECT" \
+                    --insensitive \
+                    --border-width 4 \
+                    --prompt "${2:-choose}" \
+                    --position center \
+                    --lines 20)
             else
-                ANSWER=$(echo "$ASTDIN" | instantmenu -ps "$PRESELECT" -i -h -1 -w -1 -bw 4 -p "${2:-choose}" -c -l 20)
+                ANSWER=$(echo "$ASTDIN" | instantmenu \
+                    --preselect "$PRESELECT" \
+                    --insensitive \
+                    --line-height auto \
+                    --width auto \
+                    --border-width 4 \
+                    --prompt "${2:-choose}" \
+                    --position center \
+                    --lines 20)
             fi
         else
-            if grep -q '^>' <<<"$ASTDIN"; then
-                HEADERLINES=$(echo "$ASTDIN" | grep -c '^>')
+            if grep -q '^{heading}' <<<"$ASTDIN"; then
+                HEADERLINES=$(echo "$ASTDIN" | grep -c '^{heading}')
                 ANSWER="$(echo "$ASTDIN" | fzf --layout reverse --header-lines "$HEADERLINES" --prompt "${2:-choose}> ")"
             else
                 ANSWER="$(echo "$ASTDIN" | tac | fzf --prompt "${2:-choose}> ")"
@@ -270,7 +351,16 @@ OK"
             exit 1
         fi
 
-        if ! grep -Fxq -- "$ANSWER" <<<"$ASTDIN" || grep '^>' <<<"$ANSWER"; then
+        # instantmenu outputs clean labels while fzf echoes raw lines,
+        # so compare against the stripped list in gui mode (raw still wins,
+        # e.g. for labels that genuinely start with a brace); never return
+        # heading rows
+        if ! climenu; then
+            if ! grep -Fxq -- "$ANSWER" <<<"$ASTDIN" &&
+                ! grep -Fxq -- "$ANSWER" <<<"$(sed -E 's/^\{[^{}]*\} ?//' <<<"$ASTDIN")"; then
+                ANSWER=""
+            fi
+        elif ! grep -Fxq -- "$ANSWER" <<<"$ASTDIN" || grep -q '^{heading}' <<<"$ANSWER"; then
             ANSWER=""
         fi
     done
@@ -344,12 +434,12 @@ OK"
 
     itemmenu() {
         if ! climenu; then
-            echo ":b move to top
-:b move up
-:b back
-:b move down
-:b move to the bottom
-:r remove" | imenu -l -i -s 2 "$1"
+            echo "{blue icon=angles-up} move to top
+{blue icon=chevron-up} move up
+{blue icon=arrow-left} back
+{blue icon=chevron-down} move down
+{blue icon=angles-down} move to the bottom
+{red icon=trash} remove" | imenu -l -i -s 2 "$1"
         else
             echo "move to top
 move up
@@ -373,9 +463,9 @@ move to the bottom" | imenu -l "$1"
         LPRESELECT="${ITEMNUMBER:-0}"
         ITEM="$({
             # TODO: add checkmark
-            echo ":g   Ok"
+            echo "{green icon=check} Ok"
             # TODO: add plus sign
-            echo ":g   Add item"
+            echo "{green icon=plus} Add item"
             echo "$NUMBERLIST"
         } | grep "." | imenu -l -s "$((LPRESELECT + 1))" "${1:-edit list}")"
         case "$ITEM" in
@@ -383,7 +473,7 @@ move to the bottom" | imenu -l "$1"
             echo "$LIST"
             exit
             ;;
-        ":g   Add item")
+        "Add item")
             ADDEDITEM="$(eval "$ITEMCOMMAND")"
             if [ -n "$ADDEDITEM" ]; then
                 LIST="$LIST
